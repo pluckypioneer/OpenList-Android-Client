@@ -5,6 +5,7 @@ import okhttp3.mockwebserver.MockWebServer
 import okhttp3.Protocol
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -12,7 +13,7 @@ class SystemDocumentHttpClientTest {
     private val client = SystemDocumentHttpClient()
 
     @Test
-    fun `range call sends exact range and accepts matching 206`() {
+    fun `range call sends exact range and accepts matching 206 without credentials over HTTP`() {
         MockWebServer().use { server ->
             server.enqueue(MockResponse().setResponseCode(206).setHeader("Content-Range", "bytes 3-6/10").setBody("3456"))
             server.start()
@@ -21,7 +22,9 @@ class SystemDocumentHttpClientTest {
             }
             val request = requireNotNull(server.takeRequest())
             assertEquals("bytes=3-6", request.getHeader("Range"))
-            assertEquals("Bearer secret", request.getHeader("Authorization"))
+            // MockWebServer uses cleartext HTTP. Credentials are HTTPS-only,
+            // even when the request and instance origins otherwise match.
+            assertNull(request.getHeader("Authorization"))
         }
     }
 
