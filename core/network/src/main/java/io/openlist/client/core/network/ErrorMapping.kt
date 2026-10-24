@@ -83,6 +83,7 @@ private fun codeToDomainError(code: Int, message: String): DomainError = when (c
 }
 
 fun Throwable.toDomainError(): DomainError = when (this) {
+    is InsecureTransportException -> DomainError.OpenListError(null, message.orEmpty())
     is SSLHandshakeException, is SSLException -> DomainError.CertificateError
     is SocketTimeoutException -> DomainError.Timeout
     is UnknownHostException -> DomainError.NetworkUnavailable

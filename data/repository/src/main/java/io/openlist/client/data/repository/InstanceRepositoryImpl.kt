@@ -125,6 +125,10 @@ class InstanceRepositoryImpl @Inject constructor(
     }
 
     override suspend fun testConnection(baseUrl: String): ApiResult<Unit> {
+        when (val validation = BaseUrlNormalizer.normalize(baseUrl)) {
+            is ApiResult.Failure -> return validation
+            is ApiResult.Success -> Unit
+        }
         val api = clientFactory.apiFor(baseUrl)
         val pingOk = runCatching { api.ping().isSuccessful }.getOrDefault(false)
         if (pingOk) return ApiResult.Success(Unit)

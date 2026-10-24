@@ -190,7 +190,8 @@ private fun primaryPreviewLabel(kind: PreviewKind): String? = when (kind) {
     PreviewKind.VIDEO -> "播放视频"
     PreviewKind.AUDIO -> "播放音频"
     PreviewKind.TEXT, PreviewKind.MARKDOWN -> "查看文档"
-    PreviewKind.PDF, PreviewKind.OFFICE, PreviewKind.UNKNOWN -> "外部打开"
+    PreviewKind.PDF -> "阅读 PDF"
+    PreviewKind.OFFICE, PreviewKind.UNKNOWN -> "外部打开"
 }
 
 @Composable

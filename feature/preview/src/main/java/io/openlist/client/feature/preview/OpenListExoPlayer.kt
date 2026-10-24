@@ -15,7 +15,10 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.okhttp.OkHttpDataSource
+import io.openlist.client.core.network.MediaHttpPolicy
+import okhttp3.OkHttpClient
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import io.openlist.client.core.model.MediaSource
@@ -69,16 +72,15 @@ internal fun rememberOpenListExoPlayer(
     val context = LocalContext.current
     val currentOnError by rememberUpdatedState(onError)
 
-    val exoPlayer = remember(mediaSource.url, scopedHeaders, subtitleSource) {
-        val httpDataSourceFactory = DefaultHttpDataSource.Factory().apply {
-            // S5-T1: headersRequired is fixed false today, so scopedHeaders
-            // is normally empty -- this branch exists so the DataSource.Factory
-            // wiring is real now rather than deferred until a future
-            // counter-example forces headersRequired to flip.
-            if (mediaSource.headersRequired && scopedHeaders.isNotEmpty()) {
-                setDefaultRequestProperties(scopedHeaders)
-            }
+    val exoPlayer = remember(mediaSource.url, mediaSource.provider, scopedHeaders, subtitleSource) {
+        val baiduHost = mediaSource.url.toHttpUrlOrNull()?.host?.takeIf {
+            mediaSource.provider.contains("baidu", ignoreCase = true) || mediaSource.provider.contains("百度")
         }
+        val client = OkHttpClient.Builder()
+            .followSslRedirects(false)
+            .addNetworkInterceptor(MediaHttpPolicy(baiduHost))
+            .build()
+        val httpDataSourceFactory = OkHttpDataSource.Factory(client)
         val mediaSourceFactory = DefaultMediaSourceFactory(context).setDataSourceFactory(httpDataSourceFactory)
 
         val mediaItemBuilder = MediaItem.Builder().setUri(Uri.parse(mediaSource.url))

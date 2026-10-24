@@ -37,7 +37,7 @@ class ShareRepositoryImplTest {
 
     @Before
     fun setUp() {
-        every { clientFactory.apiFor(any()) } returns api
+        every { clientFactory.apiFor(any(), any()) } returns api
         repository = ShareRepositoryImpl(
             shareDao = shareDao,
             instanceRepository = instanceRepository,

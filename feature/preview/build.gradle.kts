@@ -78,6 +78,9 @@ dependencies {
     // Video/audio playback for the media player screen (S4/S5, DEC-3).
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.datasource.okhttp)
+    implementation(libs.androidx.media3.exoplayer.hls)
+    implementation(libs.androidx.media3.exoplayer.dash)
 
     // Markdown rendering for the in-app markdown preview (S3, DEC-2).
     implementation(libs.markwon.core)

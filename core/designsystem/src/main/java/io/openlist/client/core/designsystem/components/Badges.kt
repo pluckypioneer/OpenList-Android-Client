@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import io.openlist.client.core.designsystem.OpenListPalette
 import io.openlist.client.core.designsystem.OpenListTheme
 import io.openlist.client.core.designsystem.PillShape
 import io.openlist.client.core.designsystem.Spacing
@@ -45,8 +44,8 @@ private fun badgeColors(tone: StatusTone): Pair<Color, Color> {
         // solid purple badge — purple stays reserved for the dominant CTA.
         StatusTone.PRIMARY -> scheme.inverseSurface to scheme.inverseOnSurface
         // badge-tag lavender+purple-800 (v0.3_EXECUTION_PLAN.md §7.1) — running tasks.
-        StatusTone.RUNNING -> OpenListPalette.TintLavender to OpenListPalette.BrandPurple800
+        StatusTone.RUNNING -> scheme.primaryContainer to scheme.onPrimaryContainer
         // badge-tag peach+orange-deep — pending/waiting tasks.
-        StatusTone.PENDING -> OpenListPalette.TintPeach to OpenListPalette.BrandOrangeDeep
+        StatusTone.PENDING -> scheme.tertiaryContainer to scheme.onTertiaryContainer
     }
 }

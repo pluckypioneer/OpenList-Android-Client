@@ -30,6 +30,7 @@ fun buildScopedHttpHeaders(requestUrl: String, instanceBaseUrl: String, token: S
 
     val request = requestUrl.toHttpUrlOrNull() ?: return emptyMap()
     val instance = instanceBaseUrl.toHttpUrlOrNull() ?: return emptyMap()
+    if (!request.isHttps || !instance.isHttps) return emptyMap()
 
     return if (request.scheme == instance.scheme && request.host == instance.host && request.port == instance.port) {
         mapOf("Authorization" to token)

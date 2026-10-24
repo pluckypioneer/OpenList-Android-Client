@@ -19,6 +19,7 @@ enum class PreviewKind {
  * (e.g. a PDF might route to an external app rather than an in-app viewer
  * depending on later sprints' capability checks). */
 enum class PreviewOpenMode {
+    IN_APP_PDF,
     IN_APP_IMAGE,
     IN_APP_TEXT,
     IN_APP_MARKDOWN,

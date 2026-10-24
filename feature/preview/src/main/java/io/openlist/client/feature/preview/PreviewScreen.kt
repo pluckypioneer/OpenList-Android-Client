@@ -173,6 +173,11 @@ private fun PreviewContentByOpenMode(
     modifier: Modifier = Modifier,
 ) {
     when (target.openMode) {
+        PreviewOpenMode.IN_APP_PDF -> PdfPreviewSurface(
+            source = target.source as? PreviewSource.RemoteUrl,
+            onDownload = onDownload,
+            modifier = modifier,
+        )
         PreviewOpenMode.IN_APP_IMAGE -> {
             val source = target.source as? PreviewSource.RemoteUrl
             if (source == null) {
@@ -353,6 +358,7 @@ private fun openInBrowser(context: android.content.Context, target: ExternalOpen
 }
 
 private fun PreviewOpenMode.previewModeLabel(): String = when (this) {
+    PreviewOpenMode.IN_APP_PDF,
     PreviewOpenMode.IN_APP_IMAGE,
     PreviewOpenMode.IN_APP_TEXT,
     PreviewOpenMode.IN_APP_MARKDOWN,

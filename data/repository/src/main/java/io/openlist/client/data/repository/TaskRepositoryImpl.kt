@@ -37,7 +37,7 @@ class TaskRepositoryImpl @Inject constructor(
     override suspend fun refreshRemoteTasks(instanceId: String): ApiResult<List<RemoteTask>> = coroutineScope {
         val instance = instanceRepository.getById(instanceId) ?: return@coroutineScope ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
 
         val perType = POLLED_TYPES.map { type -> async { type to fetchType(api, type) } }.map { it.await() }
 
@@ -63,7 +63,7 @@ class TaskRepositoryImpl @Inject constructor(
     override suspend fun cancelRemoteTask(instanceId: String, taskType: String, taskId: String): ApiResult<Unit> {
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         return safeApiCallUnit { api.taskCancel(taskType, taskId) }
     }
 

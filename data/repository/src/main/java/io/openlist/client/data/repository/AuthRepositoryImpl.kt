@@ -198,7 +198,7 @@ class AuthRepositoryImpl @Inject constructor(
     private suspend fun enterInstanceScope(instanceId: String): OpenListApi? {
         val instance = instanceRepository.getById(instanceId) ?: return null
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        return clientFactory.apiFor(instance.baseUrl)
+        return clientFactory.apiFor(instance.baseUrl, instance.id)
     }
 
     private fun SessionEntity.toDomain() = Session(

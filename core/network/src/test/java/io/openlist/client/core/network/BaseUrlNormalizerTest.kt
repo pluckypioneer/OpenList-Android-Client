@@ -28,9 +28,9 @@ class BaseUrlNormalizerTest {
     }
 
     @Test
-    fun `accepts http for local or intranet instances`() {
-        val result = BaseUrlNormalizer.normalize("http://192.168.1.10:5244") as ApiResult.Success
-        assertEquals("http://192.168.1.10:5244", result.data.baseUrl)
+    fun `rejects cleartext http including intranet instances`() {
+        val result = BaseUrlNormalizer.normalize("http://192.168.1.10:5244") as ApiResult.Failure
+        assertTrue(result.error is DomainError.OpenListError)
     }
 
     @Test

@@ -1,6 +1,5 @@
 package io.openlist.client.core.designsystem.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,7 +30,6 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import io.openlist.client.core.designsystem.OpenListPalette
 import io.openlist.client.core.designsystem.OpenListTheme
 import io.openlist.client.core.designsystem.PillShape
 import io.openlist.client.core.designsystem.Spacing
@@ -127,8 +125,8 @@ fun GroupCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        border = null,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
@@ -324,7 +322,7 @@ private fun summaryColors(tone: StatusTone): PlateColors {
         StatusTone.WARNING, StatusTone.PENDING -> PlateColors(extended.warning.copy(alpha = 0.12f), extended.warning)
         StatusTone.ERROR -> PlateColors(scheme.error.copy(alpha = 0.12f), scheme.error)
         // Activity metrics read as strong ink, not purple (产品级中性化, 2026-07-11).
-        StatusTone.PRIMARY, StatusTone.RUNNING -> PlateColors(scheme.surfaceVariant, scheme.onSurface)
+        StatusTone.PRIMARY, StatusTone.RUNNING -> PlateColors(scheme.primaryContainer, scheme.onPrimaryContainer)
         StatusTone.NEUTRAL -> PlateColors(scheme.surfaceVariant, scheme.onSurfaceVariant)
     }
 }
@@ -340,11 +338,11 @@ private fun plateColors(tone: PlateTone): PlateColors {
     return when (tone) {
         // Neutral by default (产品级中性化, 2026-07-11): purple is reserved for
         // the dominant CTA, so the workhorse plate is warm gray + ink.
-        PlateTone.PRIMARY -> PlateColors(scheme.surfaceVariant, scheme.onSurface)
+        PlateTone.PRIMARY -> PlateColors(scheme.primaryContainer, scheme.onPrimaryContainer)
         PlateTone.SUCCESS -> PlateColors(extended.success.copy(alpha = 0.12f), extended.success)
         PlateTone.WARNING -> PlateColors(extended.warning.copy(alpha = 0.12f), extended.warning)
         PlateTone.ERROR -> PlateColors(scheme.error.copy(alpha = 0.12f), scheme.error)
-        PlateTone.INFO -> pastelStyle(OpenListPalette.TintCream, OpenListPalette.BrandBrown)
+        PlateTone.INFO -> PastelStyle(scheme.secondaryContainer, scheme.onSecondaryContainer)
             .let { PlateColors(it.container, it.content) }
         PlateTone.NEUTRAL -> PlateColors(scheme.surfaceVariant, scheme.onSurfaceVariant)
     }

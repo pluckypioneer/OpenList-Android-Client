@@ -29,6 +29,8 @@ data class MediaSource(
      * already scoped to the right host". Defaults to empty for
      * backward-compatible construction. */
     val headers: Map<String, String> = emptyMap(),
+    val provider: String = "",
+    val artworkUrl: String? = null,
 )
 
 /** Where a [SubtitleCandidate] came from — whether `SubtitleRepository.findCandidates`

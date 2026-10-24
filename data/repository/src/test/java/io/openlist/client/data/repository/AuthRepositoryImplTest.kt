@@ -56,7 +56,7 @@ class AuthRepositoryImplTest {
         )
         coEvery { instanceRepository.getById(INSTANCE_ID) } returns instance
         coEvery { instanceRepository.setCurrent(INSTANCE_ID) } returns Unit
-        every { clientFactory.apiFor(any()) } returns api
+        every { clientFactory.apiFor(any(), any()) } returns api
         every { cryptoManager.encrypt(any()) } answers { "enc:${firstArg<String>()}" }
         repository = AuthRepositoryImpl(
             sessionDao = sessionDao,

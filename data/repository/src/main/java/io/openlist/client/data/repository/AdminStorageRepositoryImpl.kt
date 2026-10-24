@@ -67,7 +67,7 @@ class AdminStorageRepositoryImpl @Inject constructor(
 
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         // Page size large enough to cover the vast majority of real-world
         // storage counts in one request — a paginated storage Tab isn't worth
         // the added complexity for v0.5 (storages are typically few, unlike
@@ -100,7 +100,7 @@ class AdminStorageRepositoryImpl @Inject constructor(
     override suspend fun getStorage(instanceId: String, id: Int): ApiResult<AdminStorageSummary> {
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         return when (val result = safeApiCall { api.adminStorageGet(id) }) {
             is ApiResult.Success -> ApiResult.Success(result.data.toDomain())
             is ApiResult.Failure -> {
@@ -217,7 +217,7 @@ class AdminStorageRepositoryImpl @Inject constructor(
 
     private suspend fun apiFor(instanceId: String) = instanceRepository.getById(instanceId)?.let { instance ->
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        clientFactory.apiFor(instance.baseUrl)
+        clientFactory.apiFor(instance.baseUrl, instance.id)
     }
 
     private suspend fun onUnauthorized(instanceId: String, result: ApiResult<*>) {

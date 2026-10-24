@@ -57,7 +57,7 @@ class MediaRepositoryImplTest {
             note = null,
         )
         coEvery { instanceRepository.getById(INSTANCE_ID) } returns instance
-        every { clientFactory.apiFor(any()) } returns api
+        every { clientFactory.apiFor(any(), any()) } returns api
         repository = MediaRepositoryImpl(
             instanceRepository = instanceRepository,
             clientFactory = clientFactory,

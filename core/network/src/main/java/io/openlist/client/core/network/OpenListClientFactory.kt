@@ -21,27 +21,15 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Builds and caches one [OpenListApi] (Retrofit) per instance base URL, so
- * switching instances reuses connections and never crosses configuration
- * (v0.1_PRD §8.3). Token attachment is handled by [AuthInterceptor] using the
- * active [InstanceContext]. Self-signed-cert / proxy support is a reserved
- * extension point for later versions.
- *
- * Debug-logging (Settings' "调试日志" switch) is read from an [AtomicBoolean]
- * kept in sync by a background collector rather than a blocking DataStore
- * read, so toggling it takes effect immediately for every cached client
- * without ever risking a main-thread block. [SafeLogger] redacts regardless
- * of this flag, so it only controls how much is logged, never whether
- * secrets could leak.
- */
+/** Caches clients by immutable instance ID and base URL. Null ID means anonymous.
+ * Logging omits bodies and headers; authenticated API redirects are disabled. */
 @Singleton
 class OpenListClientFactory @Inject constructor(
-    private val authInterceptor: AuthInterceptor,
+    private val tokenProvider: io.openlist.client.core.auth.TokenProvider,
     private val json: Json,
     appPreferences: AppPreferences,
 ) {
-    private val apiCache = ConcurrentHashMap<String, OpenListApi>()
+    private val apiCache = ConcurrentHashMap<Pair<String, String?>, OpenListApi>()
     private val loggingEnabled = AtomicBoolean(false)
     private val loggingInterceptor = HttpLoggingInterceptor { message -> SafeLogger.d("OkHttp", message) }
 
@@ -51,19 +39,21 @@ class OpenListClientFactory @Inject constructor(
             .launchIn(CoroutineScope(SupervisorJob() + Dispatchers.Default))
     }
 
-    fun apiFor(baseUrl: String): OpenListApi {
+    fun apiFor(baseUrl: String, instanceId: String? = null): OpenListApi {
         val normalized = ensureTrailingSlash(baseUrl)
-        return apiCache.getOrPut(normalized) { buildApi(normalized) }
+        return apiCache.getOrPut(normalized to instanceId) { buildApi(normalized, instanceId) }
     }
 
-    private fun buildApi(baseUrl: String): OpenListApi {
+    private fun buildApi(baseUrl: String, instanceId: String?): OpenListApi {
         val dynamicLogging = Interceptor { chain ->
             loggingInterceptor.level =
-                if (loggingEnabled.get()) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+                if (loggingEnabled.get()) HttpLoggingInterceptor.Level.BASIC else HttpLoggingInterceptor.Level.NONE
             loggingInterceptor.intercept(chain)
         }
         val client = OkHttpClient.Builder()
-            .addInterceptor(authInterceptor)
+            .addInterceptor(AuthInterceptor(instanceId?.let { InstanceScope(it, baseUrl) }, tokenProvider))
+            .followRedirects(false)
+            .followSslRedirects(false)
             .addInterceptor(dynamicLogging)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)

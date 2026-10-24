@@ -86,7 +86,7 @@ class PreviewRepositoryImplTest {
             note = null,
         )
         coEvery { instanceRepository.getById(INSTANCE_ID) } returns instance
-        every { clientFactory.apiFor(any()) } returns api
+        every { clientFactory.apiFor(any(), any()) } returns api
         cacheDir = java.nio.file.Files.createTempDirectory("preview-cache-test").toFile()
         val context = mockk<android.content.Context>()
         every { context.cacheDir } returns cacheDir
@@ -160,13 +160,13 @@ class PreviewRepositoryImplTest {
     }
 
     @Test
-    fun `pdf resolves to EXTERNAL_APP with download and web fallbacks`() = runTest {
+    fun `pdf resolves to IN_APP_PDF with download and web fallbacks`() = runTest {
         coEvery { api.fsGet(any()) } returns success(objResp(name = "report.pdf", rawUrl = "https://example.com/d/report.pdf"))
 
         val target = (repository.resolvePreview(INSTANCE_ID, "/report.pdf") as ApiResult.Success).data
 
         assertEquals(PreviewKind.PDF, target.kind)
-        assertEquals(PreviewOpenMode.EXTERNAL_APP, target.openMode)
+        assertEquals(PreviewOpenMode.IN_APP_PDF, target.openMode)
         assertEquals(listOf(PreviewFallback.DOWNLOAD, PreviewFallback.WEB), target.fallbacks)
     }
 

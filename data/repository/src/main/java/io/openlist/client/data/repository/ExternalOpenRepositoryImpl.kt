@@ -64,14 +64,16 @@ class ExternalOpenRepositoryImpl @Inject constructor(
         val normalizedPath = OpenListPathCodec.normalize(path)
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         return when (val result = safeApiCall { api.fsGet(FsGetReq(path = normalizedPath)) }) {
             is ApiResult.Success -> {
                 val resp = result.data
                 val resolvedUrl = resp.rawUrl.ifBlank {
                     OpenListPathCodec.buildDownloadUrl(instance.baseUrl, normalizedPath, resp.sign).orEmpty()
                 }
-                if (resolvedUrl.isBlank()) {
+                if (!resolvedUrl.startsWith("https://", ignoreCase = true)) {
+                    ApiResult.Failure(DomainError.OpenListError(null, "仅支持 HTTPS 文件地址，请检查服务器配置"))
+                } else if (resolvedUrl.isBlank()) {
                     ApiResult.Failure(DomainError.Unknown(null))
                 } else {
                     ApiResult.Success(

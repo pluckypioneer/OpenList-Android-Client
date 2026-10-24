@@ -18,14 +18,29 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Replay10
+import androidx.compose.material.icons.filled.Forward10
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Surface
+import coil.compose.AsyncImage
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -81,11 +96,12 @@ internal fun AudioPlayerSurface(
     )
 
     var isPlaying by remember(exoPlayer) { mutableStateOf(exoPlayer.isPlaying) }
+    var playWhenReady by remember(exoPlayer) { mutableStateOf(exoPlayer.playWhenReady) }
     var currentPositionMs by remember(exoPlayer) { mutableLongStateOf(exoPlayer.currentPosition) }
     var durationMs by remember(exoPlayer) { mutableLongStateOf(exoPlayer.duration.coerceAtLeast(0L)) }
     var sliderDragValue by remember(exoPlayer) { mutableFloatStateOf(-1f) }
 
-    LaunchedEffect(exoPlayer) {
+    DisposableEffect(exoPlayer) {
         val listener = object : Player.Listener {
             override fun onIsPlayingChanged(playing: Boolean) {
                 isPlaying = playing
@@ -93,9 +109,11 @@ internal fun AudioPlayerSurface(
 
             override fun onEvents(player: Player, events: Player.Events) {
                 durationMs = player.duration.coerceAtLeast(0L)
+                playWhenReady = player.playWhenReady && player.playbackState != Player.STATE_ENDED
             }
         }
         exoPlayer.addListener(listener)
+        onDispose { exoPlayer.removeListener(listener) }
     }
 
     // Faster local polling than the 1s ViewModel-position-sample cadence in
@@ -112,65 +130,95 @@ internal fun AudioPlayerSurface(
     }
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(Spacing.xl),
-        verticalArrangement = Arrangement.Center,
+        modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.xl),
+        verticalArrangement = Arrangement.spacedBy(Spacing.lg),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = mediaSource.title,
-            style = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.Center,
-        )
-        androidx.compose.foundation.layout.Spacer(Modifier.size(Spacing.xxs))
-        Text(
-            text = mediaSource.path,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-
-        androidx.compose.foundation.layout.Spacer(Modifier.size(Spacing.xxl))
-
-        IconButton(
-            onClick = {
-                if (exoPlayer.isPlaying) exoPlayer.pause() else exoPlayer.play()
-            },
-            modifier = Modifier.size(64.dp),
+        Text("正在播放", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        Surface(
+            modifier = Modifier.widthIn(max = 300.dp).fillMaxWidth().aspectRatio(1f),
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.tertiaryContainer,
         ) {
-            Icon(
-                imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                contentDescription = if (isPlaying) "暂停" else "播放",
-                modifier = Modifier.size(48.dp),
+            if (mediaSource.artworkUrl != null) {
+                AsyncImage(
+                    model = mediaSource.artworkUrl,
+                    contentDescription = "专辑封面",
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Box(contentAlignment = Alignment.Center) {
+                    Box(
+                        Modifier.size(210.dp).clip(CircleShape).background(MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.10f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Box(
+                            Modifier.size(150.dp).clip(CircleShape).background(MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.10f)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(Icons.Filled.MusicNote, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onTertiaryContainer)
+                        }
+                    }
+                }
+            }
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            Text(mediaSource.title, style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, maxLines = 3, overflow = TextOverflow.Ellipsis)
+            Text(
+                mediaSource.path.substringBeforeLast('/').ifBlank { "音乐" },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
-
-        androidx.compose.foundation.layout.Spacer(Modifier.size(Spacing.md))
-
-        val sliderPositionMs = if (sliderDragValue >= 0f) (sliderDragValue * durationMs).toLong() else currentPositionMs
-        Slider(
-            value = if (durationMs > 0) sliderPositionMs.toFloat() / durationMs.toFloat() else 0f,
-            onValueChange = { fraction -> sliderDragValue = fraction },
-            onValueChangeFinished = {
-                if (sliderDragValue >= 0f && durationMs > 0) {
-                    exoPlayer.seekTo((sliderDragValue * durationMs).toLong())
-                }
-                sliderDragValue = -1f
-            },
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(text = formatDurationMs(sliderPositionMs), style = MaterialTheme.typography.bodySmall)
-            Text(text = formatDurationMs(durationMs), style = MaterialTheme.typography.bodySmall)
+        Column(Modifier.widthIn(max = 480.dp).fillMaxWidth()) {
+            val sliderPositionMs = if (sliderDragValue >= 0f) (sliderDragValue * durationMs).toLong() else currentPositionMs
+            Slider(
+                value = if (durationMs > 0) (sliderPositionMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f,
+                enabled = durationMs > 0 && exoPlayer.isCurrentMediaItemSeekable,
+                onValueChange = { sliderDragValue = it },
+                onValueChangeFinished = {
+                    if (sliderDragValue >= 0f && durationMs > 0) {
+                        currentPositionMs = (sliderDragValue * durationMs).toLong()
+                        exoPlayer.seekTo(currentPositionMs)
+                    }
+                    sliderDragValue = -1f
+                },
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(formatDurationMs(sliderPositionMs), style = MaterialTheme.typography.labelMedium)
+                Text(formatDurationMs(durationMs), style = MaterialTheme.typography.labelMedium)
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xl), verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+                enabled = exoPlayer.isCurrentMediaItemSeekable,
+                onClick = { exoPlayer.seekTo((exoPlayer.currentPosition - 10_000).coerceAtLeast(0)) },
+                modifier = Modifier.size(56.dp),
+            ) { Icon(Icons.Filled.Replay10, "后退 10 秒", Modifier.size(28.dp)) }
+            FilledIconButton(
+                onClick = {
+                    if (playWhenReady) exoPlayer.pause() else {
+                        if (exoPlayer.playbackState == Player.STATE_ENDED) exoPlayer.seekTo(0)
+                        exoPlayer.play()
+                    }
+                },
+                modifier = Modifier.size(80.dp),
+                shape = MaterialTheme.shapes.extraLarge,
+            ) {
+                Icon(if (isPlaying || playWhenReady) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                    if (isPlaying || playWhenReady) "暂停" else "播放", Modifier.size(40.dp))
+            }
+            IconButton(
+                enabled = durationMs > 0 && exoPlayer.isCurrentMediaItemSeekable,
+                onClick = { exoPlayer.seekTo((exoPlayer.currentPosition + 10_000).coerceAtMost(durationMs)) },
+                modifier = Modifier.size(56.dp),
+            ) { Icon(Icons.Filled.Forward10, "前进 10 秒", Modifier.size(28.dp)) }
         }
     }
 }
-
 private fun formatDurationMs(ms: Long): String {
     val totalSeconds = (ms / 1000).coerceAtLeast(0)
     val minutes = totalSeconds / 60

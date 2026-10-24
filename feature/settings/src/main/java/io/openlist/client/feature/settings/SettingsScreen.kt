@@ -131,6 +131,24 @@ fun SettingsScreen(
             )
 
             GroupCard {
+                SectionTitle("外观")
+                Text(
+                    text = if (android.os.Build.VERSION.SDK_INT >= 31)
+                        "Material 3 · 莫奈动态取色，配色随系统壁纸变化" else
+                        "Material 3 · 经典配色（Android 12 及以上支持莫奈取色）",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs),
+                )
+                Text(
+                    "浅色与深色模式跟随系统",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs),
+                )
+            }
+
+            GroupCard {
                 SectionTitle("常用")
                 currentInstanceId?.let { instanceId ->
                     if (currentSession?.isGuest != true) {

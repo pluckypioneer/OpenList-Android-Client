@@ -28,7 +28,7 @@ class DirectoryPickerRepositoryImpl @Inject constructor(
     override suspend fun listDirectories(instanceId: String, path: String): ApiResult<List<FileNode>> {
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         val normalizedPath = OpenListPathCodec.normalize(path)
         val result = safeApiCall { api.fsList(FsListReq(path = normalizedPath, refresh = false)) }
         return when (result) {

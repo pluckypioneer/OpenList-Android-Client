@@ -32,7 +32,7 @@ class SearchRepositoryImpl @Inject constructor(
     override suspend fun search(instanceId: String, keyword: String, scopePath: String?): ApiResult<List<SearchResultItem>> {
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         val parent = OpenListPathCodec.normalize(scopePath ?: "/")
         val req = SearchReq(parent = parent, keywords = keyword)
         return when (val result = safeApiCall { api.fsSearch(req) }) {

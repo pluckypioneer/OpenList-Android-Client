@@ -81,7 +81,7 @@ class PreviewRepositoryImpl @Inject constructor(
         val normalizedPath = OpenListPathCodec.normalize(path)
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         return when (val result = safeApiCall { api.fsGet(FsGetReq(path = normalizedPath)) }) {
             is ApiResult.Success -> ApiResult.Success(
                 result.data.toPreviewTarget(instanceId, normalizedPath, instance.baseUrl),
@@ -97,7 +97,7 @@ class PreviewRepositoryImpl @Inject constructor(
         val normalizedPath = OpenListPathCodec.normalize(path)
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
 
         val fresh = when (val result = safeApiCall { api.fsGet(FsGetReq(path = normalizedPath)) }) {
             is ApiResult.Success -> result.data
@@ -158,7 +158,7 @@ class PreviewRepositoryImpl @Inject constructor(
         val normalizedPath = OpenListPathCodec.normalize(path)
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
 
         val fresh = when (val result = safeApiCall { api.fsGet(FsGetReq(path = normalizedPath)) }) {
             is ApiResult.Success -> result.data
@@ -478,7 +478,7 @@ class PreviewRepositoryImpl @Inject constructor(
         PreviewKind.MARKDOWN -> PreviewOpenMode.IN_APP_MARKDOWN to listOf(PreviewFallback.DOWNLOAD, PreviewFallback.EXTERNAL_APP)
         PreviewKind.VIDEO -> PreviewOpenMode.IN_APP_VIDEO to listOf(PreviewFallback.DOWNLOAD, PreviewFallback.EXTERNAL_APP)
         PreviewKind.AUDIO -> PreviewOpenMode.IN_APP_AUDIO to listOf(PreviewFallback.DOWNLOAD, PreviewFallback.EXTERNAL_APP)
-        PreviewKind.PDF -> PreviewOpenMode.EXTERNAL_APP to listOf(PreviewFallback.DOWNLOAD, PreviewFallback.WEB)
+        PreviewKind.PDF -> PreviewOpenMode.IN_APP_PDF to listOf(PreviewFallback.DOWNLOAD, PreviewFallback.WEB)
         PreviewKind.OFFICE -> PreviewOpenMode.EXTERNAL_APP to listOf(PreviewFallback.DOWNLOAD, PreviewFallback.WEB)
         PreviewKind.UNKNOWN -> PreviewOpenMode.UNSUPPORTED to listOf(PreviewFallback.DOWNLOAD, PreviewFallback.EXTERNAL_APP, PreviewFallback.WEB)
     }

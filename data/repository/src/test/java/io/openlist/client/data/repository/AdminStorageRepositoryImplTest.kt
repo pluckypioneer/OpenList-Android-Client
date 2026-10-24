@@ -62,7 +62,7 @@ class AdminStorageRepositoryImplTest {
             note = null,
         )
         coEvery { instanceRepository.getById(INSTANCE_ID) } returns instance
-        every { clientFactory.apiFor(any()) } returns api
+        every { clientFactory.apiFor(any(), any()) } returns api
         repository = AdminStorageRepositoryImpl(
             instanceRepository = instanceRepository,
             clientFactory = clientFactory,

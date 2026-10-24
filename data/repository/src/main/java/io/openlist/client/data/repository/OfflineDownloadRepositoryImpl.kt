@@ -27,14 +27,14 @@ class OfflineDownloadRepositoryImpl @Inject constructor(
 
     override suspend fun listTools(instanceId: String): ApiResult<List<String>> {
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         return safeApiCall { api.offlineDownloadTools() }
     }
 
     override suspend fun addOfflineDownload(instanceId: String, urls: List<String>, targetDir: String, tool: String?): ApiResult<List<RemoteTask>> {
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         val req = AddOfflineDownloadReq(
             urls = urls,
             path = OpenListPathCodec.normalize(targetDir),

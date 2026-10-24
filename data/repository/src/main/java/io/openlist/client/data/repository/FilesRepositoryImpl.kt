@@ -58,7 +58,7 @@ class FilesRepositoryImpl @Inject constructor(
             return@flow
         }
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         // `refresh` is always false here — see FilesRepository's kdoc: it's an
         // OpenList server-side rescan gated on write permission, not this app's
         // local cache invalidation.
@@ -84,7 +84,7 @@ class FilesRepositoryImpl @Inject constructor(
         val normalizedPath = OpenListPathCodec.normalize(path)
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         return when (val result = safeApiCall { api.fsGet(FsGetReq(path = normalizedPath)) }) {
             is ApiResult.Success -> ApiResult.Success(result.data.toDomainDetail(normalizedPath, instance.baseUrl))
             is ApiResult.Failure -> {

@@ -96,7 +96,7 @@ class AdminSettingsRepositoryImpl @Inject constructor(
 
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         return when (val result = safeApiCall { call(api) }) {
             is ApiResult.Success -> {
                 // Mapping to AdminSettingItem happens BEFORE any encodeToString

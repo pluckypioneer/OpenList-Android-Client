@@ -181,7 +181,7 @@ class FileOperationRepositoryImpl @Inject constructor(
     private suspend fun apiFor(instanceId: String): OpenListApi? {
         val instance = instanceRepository.getById(instanceId) ?: return null
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        return clientFactory.apiFor(instance.baseUrl)
+        return clientFactory.apiFor(instance.baseUrl, instance.id)
     }
 
     private suspend fun onUnauthorized(instanceId: String, result: ApiResult<*>) {

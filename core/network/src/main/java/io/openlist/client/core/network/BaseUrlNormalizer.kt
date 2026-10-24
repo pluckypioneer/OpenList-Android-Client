@@ -21,6 +21,12 @@ object BaseUrlNormalizer {
             return ApiResult.Failure(DomainError.InvalidInstance)
         }
         val httpUrl = trimmed.toHttpUrlOrNull() ?: return ApiResult.Failure(DomainError.InvalidInstance)
+        if (!httpUrl.isHttps) return ApiResult.Failure(
+            DomainError.OpenListError(null, "仅支持 HTTPS，请为服务器启用 HTTPS 后重新添加"),
+        )
+        if (httpUrl.username.isNotEmpty() || httpUrl.password.isNotEmpty() ||
+            httpUrl.query != null || httpUrl.fragment != null
+        ) return ApiResult.Failure(DomainError.InvalidInstance)
         val normalized = httpUrl.toString().trimEnd('/')
         if (normalized.isEmpty()) return ApiResult.Failure(DomainError.InvalidInstance)
         return ApiResult.Success(Normalized(baseUrl = normalized, displayName = httpUrl.host))

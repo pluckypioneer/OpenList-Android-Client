@@ -1,6 +1,8 @@
-name: Android Manual APK
+name: Android APK
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       run_tests:
@@ -93,7 +95,7 @@ jobs:
         run: |
           abi_includes=()
           selected_labels=()
-          if [ "${{ inputs.build_arm64_v8a }}" = "true" ]; then
+          if [ "${{ github.event_name }}" = "push" ] || [ "${{ inputs.build_arm64_v8a }}" = "true" ]; then
             abi_includes+=("arm64-v8a")
             selected_labels+=("arm64-v8a")
           fi

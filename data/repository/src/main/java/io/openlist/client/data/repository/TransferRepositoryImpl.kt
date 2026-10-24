@@ -15,6 +15,7 @@ import io.openlist.client.core.model.DownloadStatus
 import io.openlist.client.core.model.DownloadTask
 import io.openlist.client.core.model.FileDetail
 import io.openlist.client.core.network.toDomainError
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.UUID
@@ -30,6 +31,9 @@ class TransferRepositoryImpl @Inject constructor(
     override suspend fun enqueueDownload(instanceId: String, file: FileDetail): ApiResult<Long> {
         if (file.rawUrl.isBlank()) {
             return ApiResult.Failure(DomainError.OpenListError(code = null, message = "未获取到下载链接"))
+        }
+        if (file.rawUrl.toHttpUrlOrNull()?.isHttps != true) {
+            return ApiResult.Failure(DomainError.OpenListError(null, "仅支持 HTTPS 下载，请检查服务器的文件链接配置"))
         }
         return try {
             val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager

@@ -45,7 +45,7 @@ class SubtitleRepositoryImpl @Inject constructor(
         val normalizedPath = OpenListPathCodec.normalize(videoPath)
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         return when (val result = safeApiCall { api.fsGet(FsGetReq(path = normalizedPath)) }) {
             is ApiResult.Success -> {
                 val parent = OpenListPathCodec.parent(normalizedPath)
@@ -65,7 +65,7 @@ class SubtitleRepositoryImpl @Inject constructor(
         val normalizedPath = OpenListPathCodec.normalize(subtitlePath)
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         return when (val result = safeApiCall { api.fsGet(FsGetReq(path = normalizedPath)) }) {
             is ApiResult.Success -> {
                 val resp = result.data

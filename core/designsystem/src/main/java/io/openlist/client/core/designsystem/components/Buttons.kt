@@ -25,7 +25,7 @@ fun PrimaryButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled && !loading,
-        shape = MaterialTheme.shapes.medium,
+        shape = io.openlist.client.core.designsystem.PillShape,
         contentPadding = PaddingValues(horizontal = Spacing.lg, vertical = Spacing.sm),
     ) {
         if (loading) {
@@ -51,7 +51,7 @@ fun SecondaryButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        shape = MaterialTheme.shapes.medium,
+        shape = io.openlist.client.core.designsystem.PillShape,
         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
         contentPadding = PaddingValues(horizontal = Spacing.lg, vertical = Spacing.sm),
     ) {
@@ -73,7 +73,7 @@ fun DangerActionButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled && !loading,
-        shape = MaterialTheme.shapes.medium,
+        shape = io.openlist.client.core.designsystem.PillShape,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.error,
             contentColor = MaterialTheme.colorScheme.onError,

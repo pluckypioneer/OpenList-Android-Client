@@ -23,7 +23,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import io.openlist.client.core.designsystem.OpenListPalette
 import io.openlist.client.core.designsystem.OpenListTheme
 import io.openlist.client.core.designsystem.Spacing
 
@@ -33,7 +32,7 @@ fun fileKindOf(name: String, isDir: Boolean): FileKind {
     if (isDir) return FileKind.FOLDER
     return when (name.substringAfterLast('.', "").lowercase()) {
         "jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "heic", "heif", "avif" -> FileKind.IMAGE
-        "mp4", "mkv", "avi", "mov", "wmv", "flv", "webm", "m4v", "ts", "rmvb" -> FileKind.VIDEO
+        "mp4", "mkv", "avi", "mov", "wmv", "flv", "webm", "m4v", "ts", "rmvb", "m3u8", "mpd" -> FileKind.VIDEO
         "mp3", "flac", "wav", "aac", "ogg", "m4a", "wma", "opus", "ape" -> FileKind.AUDIO
         "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "md", "epub", "csv" -> FileKind.DOCUMENT
         "zip", "rar", "7z", "tar", "gz", "bz2", "xz", "iso" -> FileKind.ARCHIVE
@@ -55,17 +54,15 @@ fun pastelStyle(tint: Color, deep: Color): PastelStyle =
 // lavender/sky would put purple/blue on half the rows (产品级中性化, 2026-07-11).
 // The rarer media kinds keep their warm pastel echo.
 @Composable
-fun fileKindStyle(kind: FileKind): PastelStyle = when (kind) {
-    FileKind.FOLDER -> pastelStyle(OpenListPalette.TintGray, OpenListPalette.Charcoal)
-    FileKind.IMAGE -> pastelStyle(OpenListPalette.TintMint, OpenListPalette.BrandGreen)
-    FileKind.VIDEO -> pastelStyle(OpenListPalette.TintPeach, OpenListPalette.BrandOrangeDeep)
-    FileKind.AUDIO -> pastelStyle(OpenListPalette.TintRose, OpenListPalette.BrandPinkDeep)
-    FileKind.DOCUMENT -> pastelStyle(OpenListPalette.TintCream, OpenListPalette.BrandBrown)
-    FileKind.ARCHIVE -> pastelStyle(OpenListPalette.TintYellow, OpenListPalette.BrandBrown)
-    FileKind.CODE -> pastelStyle(OpenListPalette.TintGray, OpenListPalette.Charcoal)
-    FileKind.OTHER -> pastelStyle(OpenListPalette.TintGray, OpenListPalette.Slate)
+fun fileKindStyle(kind: FileKind): PastelStyle {
+    val scheme = MaterialTheme.colorScheme
+    return when (kind) {
+        FileKind.FOLDER -> PastelStyle(scheme.primaryContainer, scheme.onPrimaryContainer)
+        FileKind.IMAGE, FileKind.VIDEO, FileKind.AUDIO -> PastelStyle(scheme.tertiaryContainer, scheme.onTertiaryContainer)
+        FileKind.DOCUMENT, FileKind.CODE -> PastelStyle(scheme.secondaryContainer, scheme.onSecondaryContainer)
+        FileKind.ARCHIVE, FileKind.OTHER -> PastelStyle(scheme.surfaceContainerHighest, scheme.onSurfaceVariant)
+    }
 }
-
 fun fileKindIcon(kind: FileKind): ImageVector = when (kind) {
     FileKind.FOLDER -> Icons.Outlined.Folder
     FileKind.IMAGE -> Icons.Outlined.Image

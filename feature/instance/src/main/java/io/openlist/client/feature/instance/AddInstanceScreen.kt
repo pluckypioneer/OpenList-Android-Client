@@ -106,7 +106,7 @@ fun AddInstanceScreen(
                         placeholder = "https://nas.example.com",
                         leadingIcon = Icons.Outlined.Link,
                         keyboardType = KeyboardType.Uri,
-                        supportingText = "仅支持 HTTP/HTTPS，建议使用 HTTPS 以保证安全",
+                        supportingText = "仅支持 HTTPS，加密保护登录凭据与文件内容",
                     )
                     IconTextField(
                         value = uiState.name,
@@ -288,9 +288,9 @@ private fun SecurityHint(isHttp: Boolean) {
         )
         Text(
             text = if (isHttp) {
-                "当前为明文 HTTP，登录凭据与文件内容不会加密传输"
+                "已阻止明文 HTTP，请改用 HTTPS 地址"
             } else {
-                "仅支持 HTTP/HTTPS，建议使用 HTTPS 以保证安全"
+                "仅支持 HTTPS，加密保护登录凭据与文件内容"
             },
             style = MaterialTheme.typography.bodySmall,
             color = if (isHttp) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,

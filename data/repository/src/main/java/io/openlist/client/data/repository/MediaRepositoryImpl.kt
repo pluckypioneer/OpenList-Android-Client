@@ -51,7 +51,7 @@ class MediaRepositoryImpl @Inject constructor(
         val normalizedPath = OpenListPathCodec.normalize(path)
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         return when (val result = safeApiCall { api.fsGet(FsGetReq(path = normalizedPath)) }) {
             is ApiResult.Success -> {
                 val resp = result.data
@@ -102,6 +102,8 @@ class MediaRepositoryImpl @Inject constructor(
                             // here per this Sprint's boundary.
                             subtitles = emptyList(),
                             headers = headers,
+                            provider = resp.provider,
+                            artworkUrl = resp.thumb.takeIf { it.startsWith("https://") },
                         ),
                     )
                 }

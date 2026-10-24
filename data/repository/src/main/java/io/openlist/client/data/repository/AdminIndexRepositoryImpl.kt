@@ -82,7 +82,7 @@ class AdminIndexRepositoryImpl @Inject constructor(
 
     private suspend fun apiFor(instanceId: String) = instanceRepository.getById(instanceId)?.let { instance ->
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        clientFactory.apiFor(instance.baseUrl)
+        clientFactory.apiFor(instance.baseUrl, instance.id)
     }
 
     private suspend fun onUnauthorized(instanceId: String, result: ApiResult<*>) {

@@ -99,8 +99,8 @@ class PreviewKindResolverTest {
     }
 
     @Test
-    fun `PDF OFFICE and UNKNOWN are not in-app previewable, P-404`() {
-        assertEquals(false, PreviewKindResolver.isInAppPreviewable(PreviewKind.PDF))
+    fun `PDF is previewable while OFFICE and UNKNOWN use external apps`() {
+        assertEquals(true, PreviewKindResolver.isInAppPreviewable(PreviewKind.PDF))
         assertEquals(false, PreviewKindResolver.isInAppPreviewable(PreviewKind.OFFICE))
         assertEquals(false, PreviewKindResolver.isInAppPreviewable(PreviewKind.UNKNOWN))
     }

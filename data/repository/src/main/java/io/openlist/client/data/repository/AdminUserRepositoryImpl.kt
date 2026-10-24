@@ -60,7 +60,7 @@ class AdminUserRepositoryImpl @Inject constructor(
 
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         return when (val result = safeApiCall { api.adminUserList(page = page, perPage = PAGE_SIZE) }) {
             is ApiResult.Success -> {
                 val domain = AdminUserPage(
@@ -89,7 +89,7 @@ class AdminUserRepositoryImpl @Inject constructor(
     override suspend fun getUser(instanceId: String, id: Int): ApiResult<AdminUserSummary> {
         val instance = instanceRepository.getById(instanceId) ?: return ApiResult.Failure(DomainError.InvalidInstance)
         instanceContext.set(InstanceScope(instance.id, instance.baseUrl))
-        val api = clientFactory.apiFor(instance.baseUrl)
+        val api = clientFactory.apiFor(instance.baseUrl, instance.id)
         return when (val result = safeApiCall { api.adminUserGet(id) }) {
             is ApiResult.Success -> ApiResult.Success(result.data.toDomain())
             is ApiResult.Failure -> {
