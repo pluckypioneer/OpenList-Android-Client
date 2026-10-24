@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       run_tests:
-        description: "Run unit tests before building signed APKs"
+        description: "Run unit tests before building APKs"
         required: true
         type: boolean
         default: true
@@ -41,7 +41,7 @@ permissions:
 
 jobs:
   signed-apk:
-    name: Build signed APKs
+    name: Build installable APKs
     runs-on: ubuntu-latest
 
     steps:
@@ -58,7 +58,27 @@ jobs:
       - name: Make Gradle executable
         run: chmod +x ./gradlew
 
+      - name: Select build variant
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          if [ -n "$RELEASE_KEYSTORE_BASE64" ] && [ -n "$RELEASE_STORE_PASSWORD" ] &&
+             [ -n "$RELEASE_KEY_ALIAS" ] && [ -n "$RELEASE_KEY_PASSWORD" ]; then
+            echo "BUILD_VARIANT=release" >> "$GITHUB_ENV"
+            echo "GRADLE_TASK=assembleRelease" >> "$GITHUB_ENV"
+            echo "Release signing configured; building release APKs." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "BUILD_VARIANT=debug" >> "$GITHUB_ENV"
+            echo "GRADLE_TASK=assembleDebug" >> "$GITHUB_ENV"
+            echo "Release signing secrets are incomplete; building installable debug APKs." >> "$GITHUB_STEP_SUMMARY"
+            echo "Debug APKs use a runner-generated key and cannot update an installation signed with another key." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Restore release keystore
+        if: env.BUILD_VARIANT == 'release'
         env:
           RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
         run: |
@@ -66,6 +86,7 @@ jobs:
           echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > release.keystore
 
       - name: Write signing properties
+        if: env.BUILD_VARIANT == 'release'
         env:
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
@@ -89,7 +110,7 @@ jobs:
           test -n "$VERSION_CODE"
           echo "VERSION_NAME=$VERSION_NAME" >> "$GITHUB_ENV"
           echo "VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
-          echo "ARTIFACT_NAME=openlist-android-v${VERSION_NAME}-${VERSION_CODE}-signed-apks" >> "$GITHUB_ENV"
+          echo "ARTIFACT_NAME=openlist-android-v${VERSION_NAME}-${VERSION_CODE}-${BUILD_VARIANT}-apks" >> "$GITHUB_ENV"
 
       - name: Resolve selected APK types
         run: |
@@ -133,9 +154,9 @@ jobs:
         if: ${{ inputs.run_tests }}
         run: ./gradlew testDebugUnitTest --stacktrace
 
-      - name: Build signed release APKs
+      - name: Build APKs
         run: |
-          ./gradlew assembleRelease \
+          ./gradlew "$GRADLE_TASK" \
             -Popenlist.enableAbiSplits="${ENABLE_ABI_SPLITS}" \
             -Popenlist.abiIncludes="${ABI_INCLUDES}" \
             -Popenlist.universalApk="${UNIVERSAL_APK}" \
@@ -145,7 +166,7 @@ jobs:
         run: |
           mkdir -p dist/apk
           shopt -s nullglob
-          apks=(app/build/outputs/apk/release/*.apk)
+          apks=(app/build/outputs/apk/"${BUILD_VARIANT}"/*.apk)
           test "${#apks[@]}" -gt 0
           for apk in "${apks[@]}"; do
             base="$(basename "$apk")"
@@ -160,7 +181,7 @@ jobs:
             if [[ ",${SELECTED_APK_TYPES}," != *",${abi},"* ]]; then
               continue
             fi
-            cp "$apk" "dist/apk/openlist-android-v${VERSION_NAME}-${abi}.apk"
+            cp "$apk" "dist/apk/openlist-android-v${VERSION_NAME}-${BUILD_VARIANT}-${abi}.apk"
           done
           test "$(find dist/apk -name '*.apk' | wc -l)" -gt 0
           ls -lh dist/apk

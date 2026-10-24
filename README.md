@@ -313,7 +313,7 @@ Windows PowerShell：
 
 仓库包含手动触发的 `.github/workflows/android-apk.yml` 工作流。该工作流仅由 `workflow_dispatch` 触发，不响应 push、pull request 或 tag 事件，也不创建 GitHub Release。
 
-需要在仓库的 Actions Secrets 中配置：
+如需正式签名的 Release APK，需要在仓库的 Actions Secrets 中配置以下项目；缺少任一项时工作流自动构建可安装的 Debug APK：
 
 ```text
 RELEASE_KEYSTORE_BASE64
@@ -634,5 +634,5 @@ ViewModel 通过协程和 Flow 暴露界面状态。Repository 实现负责网�
 - 音乐页增加专辑封面（无封面时显示唱片图形）、大播放按钮、进度拖动和前后 10 秒控制。
 - 百度网盘媒体在实际网络请求及重定向后使用兼容 UA；媒体请求不携带应用登录 Token。支持 HLS/DASH。
 - PDF 使用 Android 原生 PdfRenderer 离线渲染，不向在线阅读服务发送文件地址；退出阅读时清理本次临时文件。
-- 推送 main 后 Actions 自动构建 arm64-v8a 签名 APK，不运行单元测试；其他架构仍可手动选择。需要仓库已配置原有签名 Secrets。
+- 推送 main 后 Actions 自动构建 arm64-v8a APK，不运行单元测试；其他架构仍可手动选择。签名 Secrets 齐全时构建 Release，否则构建 Debug，并在产物名称中标明。Debug 使用运行器生成的调试密钥，不能覆盖不同密钥签名的已安装版本，跨次构建也不保证可以覆盖安装。
 - 百度网盘 UA 要求参考 https://doc.oplist.org/guide/drivers/baidu 。网盘权限、服务端代理及链接有效期仍由服务器决定。
